@@ -1,0 +1,26 @@
+version: '2'
+services:
+  producer:
+    build: ./pyproducer
+    environment:
+      - CONFIG_KAFKA_TOPIC=VENDAS_DIARIAS
+      - CONFIG_KAFKA_SERVERS=kafka001.local:9092,kafka002.local:9092,kafka003.local:9092
+      - CONFIG_KAFKA_SEND_TIMEOUT=10
+      - CONFIG_KAFKA_ACKS=all
+      - CONFIG_KAFKA_RETRIES_CONNECT=5
+  consumer:
+    build: ./pyconsumer
+    environment:
+      - CONFIG_KAFKA_GROUP_ID=kconsumer
+      - CONFIG_KAFKA_TOPIC=VENDAS_DIARIAS
+      - CONFIG_KAFKA_SERVERS=kafka001.local:9092,kafka002.local:9092,kafka003.local:9092
+      - CONFIG_KAFKA_OFFSET_RESET=earliest
+      - CONFIG_KAFKA_AUTO_COMMIT=false
+      - CONFIG_KAFKA_INTERVAL_COMMIT=1000
+  kafka_gui:
+    image: provectuslabs/kafka-ui:latest
+    ports:
+      - 8080:8080
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka001.local:9092,kafka002.local:9092,kafka003.local:9092

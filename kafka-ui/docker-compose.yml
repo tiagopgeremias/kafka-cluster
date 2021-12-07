@@ -1,0 +1,11 @@
+version: '2'
+services:
+  kafka_gui:
+    image: provectuslabs/kafka-ui:latest
+    depends_on:
+      - kafka
+    ports:
+      - 8080:8080
+    environment:
+      KAFKA_CLUSTERS_0_NAME: example
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka001.local:9092,kafka002.local:9092,kafka003.local:9092

@@ -1,0 +1,84 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kafkaui
+  namespace: default
+  labels:
+    app: kafkaui
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kafkaui
+  template:
+    metadata:
+      labels:
+        app: kafkaui
+    spec:
+      containers:
+      - name: kafkaui
+        envFrom:
+        - configMapRef:
+            name: kafkaui-env
+        image: provectuslabs/kafka-ui:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080
+      hostAliases:
+      - ip: 192.168.122.21
+        hostnames:
+        - kafka001.local
+      - ip: 192.168.122.22
+        hostnames:
+        - kafka002.local
+      - ip: 192.168.122.23
+        hostnames:
+        - kafka003.local
+
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: kafkaui-service
+  namespace: default
+spec:
+  selector:
+    app: kafkaui
+  type: ClusterIP
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+
+---
+apiVersion: v1
+data:
+  KAFKA_CLUSTERS_0_NAME: virt-cluster
+  KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: "kafka001.local:9092,kafka002.local:9092,kafka003.local:9092"
+  KAFKA_CLUSTERS_0_ZOOKEEPER: "kafka001.local:2181,kafka002.local:2181,kafka003.local:2181"
+kind: ConfigMap
+metadata:
+  name: kafkaui-env
+  namespace: default
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  namespace: default
+  name: kafkaui-ingress
+  annotations:
+    allow.http: "true"
+spec:
+  rules:
+  - host: kafkaui.local
+    http:
+      paths:
+        - path: /
+          pathType: Prefix
+          backend:
+            service:
+              name: kafkaui-service
+              port:
+                number: 8080
